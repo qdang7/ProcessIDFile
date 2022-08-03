@@ -1,6 +1,7 @@
 import models.Footer;
 import models.Header;
 import models.IDModel;
+import models.SDModel;
 import utils.AppConstant;
 
 import java.io.*;
@@ -14,8 +15,8 @@ import java.util.List;
 import java.util.Scanner;
 
 public class App {
-    public static final String FILE_PATH_INPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\ID116651.C2N";
-    public static final String FILE_PATH_OUTPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Files Container\\idunproc.C2N";
+    public static final String FILE_PATH_INPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Documents\\RDNSDC_Precondition\\Hex-Json\\SD113361.C2N";
+    public static final String FILE_PATH_OUTPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Documents\\RDNSDC_Precondition\\Hex-Json\\sdoutput.C2N";
     private static boolean breakLoop = false;
     private static int byteBuffCursor = 0;
 
@@ -291,80 +292,178 @@ private static List<Object> readIDFile(String filePath){
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    private static void writeSDFile(SDModel model, FileChannel sdChannel){
+        byte[] buffer;
+        ByteBuffer sizeBuffer = ByteBuffer.allocate(0x100000);
+        sizeBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
+        buffer = model.getTransID().getBytes();
+        sizeBuffer.put(buffer);
+
+        byte transAttempt = (byte) model.getTransAttempt();
+        sizeBuffer.put(transAttempt);
+
+        buffer = model.getDateTime().getBytes();
+        sizeBuffer.put(buffer);
+
+        byte actionUID = (byte) model.getActionUID();
+        sizeBuffer.put(actionUID);
+
+        buffer = model.getSdc().getBytes();
+        sizeBuffer.put(buffer);
+        
+        sizeBuffer.putLong(model.getSdcDestID());
+
+        buffer = model.getRegBlocks().getBytes();
+        sizeBuffer.put(buffer);
+
+
+        sizeBuffer.putChar(' ');
+
+//        sizeBuffer.putInt(model.getScheduleID());
+//
+//        sizeBuffer.putInt(model.getItemID());
+//
+//        byte nullByte = (byte) model.getREC_NULL();
+//        sizeBuffer.put(nullByte);
+
+        sizeBuffer.flip();
+        try {
+            sdChannel.write(sizeBuffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static SDModel readSDFixed(ByteBuffer byteBuffer, String data){
+        if (data.substring(byteBuffCursor,
+                byteBuffCursor += AppConstant.LEN_FooterIdent).equals(
+                "FOOT>>")) {
+            return null;
+        }
+        byteBuffCursor -= 6;
+
+        SDModel sdModel = new SDModel();
+        sdModel.setTransID(data.substring(byteBuffCursor, byteBuffCursor += AppConstant.LEN_TransID));
+        sdModel.setTransAttempt((char) ((byte) byteBuffer.getChar(byteBuffCursor)));
+
+        byteBuffCursor += 1;
+
+        sdModel.setDateTime(data.substring(byteBuffCursor, byteBuffCursor += AppConstant.LEN_DateTime));
+
+        sdModel.setActionUID((char) ((byte) byteBuffer.getChar(byteBuffCursor)));
+        byteBuffCursor += 1;
+
+        sdModel.setSdc(data.substring(byteBuffCursor, byteBuffCursor += AppConstant.LEN_ITM_SDC));
+        sdModel.setSdcDestID(byteBuffer.getInt(byteBuffCursor));
+        byteBuffCursor += 4;
+
+        sdModel.setSdcGenericDesc(data.substring(byteBuffCursor, byteBuffCursor += AppConstant.LEN_ITM_DESC));
+        sdModel.setSdcCapacity(data.substring(byteBuffCursor, byteBuffCursor += AppConstant.LEN_Capacity));
+        sdModel.setSdcDesc(data.substring(byteBuffCursor, byteBuffCursor += AppConstant.LEN_ITM_DESC));
+        sdModel.setDiscipline(data.substring(byteBuffCursor, byteBuffCursor += AppConstant.LEN_Discipline));
+
+        sdModel.setIuwkDef(byteBuffer.getFloat(byteBuffCursor));
+        byteBuffCursor += 4;
+        sdModel.setIuthDef(byteBuffer.getFloat(byteBuffCursor));
+        byteBuffCursor += 4;
+        sdModel.setNumRegBlocks(byteBuffer.getShort(byteBuffCursor));
+        byteBuffCursor += 2;
+
+        sdModel.setRegBlocks(data.substring(byteBuffCursor, byteBuffCursor += sdModel.getNumRegBlocks() * 8));
+
+        // Read null byte of each record
+        byteBuffCursor += 1;
+
+        return sdModel;
+    }
+
+
+    public static void main(String[] args) throws IOException {
         String data = "";
-        FileInputStream fileInputStream = new FileInputStream(new File(FILE_PATH_OUTPUT));
+        FileInputStream fileInputStream = new FileInputStream(new File(FILE_PATH_INPUT));
         ByteBuffer byteBuffer = ByteBuffer.allocate(0x10000);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
         FileChannel fileChannel = fileInputStream.getChannel();
         fileChannel.read(byteBuffer);
         data = new String(byteBuffer.array());
 
-        Header header = readHeader(data);
-        System.out.println(header.getTransCode());
-        System.out.println(header.getCounter());
-        System.out.println(header.getDate());
-        System.out.println(header.getTime());
-        System.out.println(header.getTrailer());
-        int i=0;
-        while (true){
-            try {
-                IDModel model = readIDFile(byteBuffer, data, i++);
-                System.out.println(model.getTransID());
-                System.out.println(model.getDateTime());
-                System.out.println(model.getAttemptCount());
-                System.out.println(model.getScheduleID());
-                System.out.println(model.getItemID());
-            }catch (Exception e){
-                break;
-            }
-        }
-
-        Footer footer = readFooter(data);
-        System.out.println(footer.getFooterIdent());
-        System.out.println(footer.getCounter());
-        System.out.println(footer.getRecordCount());
-        System.out.println(footer.getRowText());
-        System.out.println(footer.getTime());
-        System.out.println(footer.getDate());
-
-        /* Line of codes below is for file reading */
-
-//        FileOutputStream fileOutputStream = new FileOutputStream(new File(FILE_PATH_OUTPUT));
-//        FileChannel outputChannel = fileOutputStream.getChannel();
-
-
-//        models.Header header = new models.Header();
-//        header.setHeaderIdent("HEAD>>");
-//        header.setDate("20220517");
-//        header.setTime("21:15:08");
-//        header.setTransCode("ID");
-//        header.setSpacer1(' ');
-//        header.setSpacer2(' ');
-//        header.setSpacer3(' ');
-//        header.setTrailer("<<\0");
-//        header.setCounter("0");
+//        Header header = readHeader(data);
+//        System.out.println(header.getTransCode());
+//        System.out.println(header.getCounter());
+//        System.out.println(header.getDate());
+//        System.out.println(header.getTime());
+//        System.out.println(header.getTrailer());
+//        int i=0;
+//        while (true){
+//            try {
+//                SDModel model = readSDFixed(byteBuffer, data);
 //
-//        List<models.IDModel> idModels = utils.DataGenerator.initIDModelArrayList();
-//
-//        models.Footer footer = new models.Footer();
-//        footer.setCounter("0");
-//        footer.setFooterIdent("Foot>>");
-//        footer.setDate("20220517");
-//        footer.setRecordCount("000000830");
-//        footer.setTime("21:15:08");
-//        footer.setSpacer1(' ');
-//        footer.setRowText("");
-//        footer.setSpacer2(' ');
-//        footer.setSpacer3(' ');
-//        footer.setSpacer4(' ');
-//        footer.setSpacer5(' ');
-//
-//        writeHeaderwithTransCode(outputChannel, "ID");
-//        for (models.IDModel model: idModels) {
-//            writeToUnprocessed(model, outputChannel);
+//                System.out.println(model.getTransID());
+//                System.out.println(model.getTransAttempt());
+//                System.out.println(model.getDateTime());
+//                System.out.println(model.getActionUID());
+//                System.out.println(model.getSdc());
+//                System.out.println(model.getSdcDestID());
+//                System.out.println(model.getSdcGenericDesc());
+//                System.out.println(model.getSdcCapacity());
+//                System.out.println(model.getSdcDesc());
+//                System.out.println(model.getDiscipline());
+//                System.out.println(model.getIuwkDef());
+//                System.out.println(model.getIuthDef());
+//                System.out.println(model.getNumRegBlocks());
+//                System.out.println(model.getRegBlocks());
+//                i++;
+//            }catch (Exception e){
+//                break;
+//            }
 //        }
-//        writeFooter(outputChannel);
+//
+//        Footer footer = readFooter(data);
+//        System.out.println(footer.getFooterIdent());
+//        System.out.println(footer.getCounter());
+//        System.out.println(footer.getRecordCount());
+//        System.out.println(footer.getRowText());
+//        System.out.println(footer.getTime());
+//        System.out.println(footer.getDate());
+
+        /* Line of codes below is for file writing */
+
+        FileOutputStream fileOutputStream = new FileOutputStream(new File(FILE_PATH_OUTPUT));
+        FileChannel outputChannel = fileOutputStream.getChannel();
+
+
+        models.Header header = new models.Header();
+        header.setHeaderIdent("HEAD>>");
+        header.setDate("20220517");
+        header.setTime("21:15:08");
+        header.setTransCode("SD");
+        header.setSpacer1(' ');
+        header.setSpacer2(' ');
+        header.setSpacer3(' ');
+        header.setTrailer("<<\0");
+        header.setCounter("0");
+
+        List<SDModel> sdModels = utils.DataGenerator.initSDModels();
+
+        models.Footer footer = new models.Footer();
+        footer.setCounter("0");
+        footer.setFooterIdent("Foot>>");
+        footer.setDate("20220517");
+        footer.setRecordCount("000000830");
+        footer.setTime("21:15:08");
+        footer.setSpacer1(' ');
+        footer.setRowText("");
+        footer.setSpacer2(' ');
+        footer.setSpacer3(' ');
+        footer.setSpacer4(' ');
+        footer.setSpacer5(' ');
+
+        writeHeaderwithTransCode(outputChannel, "SD");
+        for (SDModel model: sdModels) {
+            writeSDFile(model, outputChannel);
+        }
+        writeFooter(outputChannel);
     }
+
 }

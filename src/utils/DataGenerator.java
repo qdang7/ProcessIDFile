@@ -1,6 +1,7 @@
 package utils;
 
 import models.IDModel;
+import models.SDModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,5 +51,62 @@ public class DataGenerator {
         idModels.add(model5);
 
         return idModels;
+    }
+
+    public static List<SDModel> initSDModels(){
+        List<SDModel> sdModels = new ArrayList<>();
+
+        SDModel model1 = new SDModel();
+        model1.setTransID("SD");
+        model1.setActionUID('I');
+        model1.setDiscipline("LC");
+        model1.setIuthDef(14.0);
+        model1.setIuwkDef(0.0);
+        model1.setSdc("L4357");
+        model1.setDateTime("20090728212122");
+        model1.setSdcCapacity("200 Ton");
+        model1.setSdcDesc("Electric Overhead Travelling Crane");
+        model1.setSdcGenericDesc("CRANES");
+        model1.setNumRegBlocks(6);
+        model1.setTransAttempt('0');
+        model1.setRegBlocks("CR   12 DR   12 FA   12 MQ   12 OS   0  SB   0  ");
+
+        sdModels.add(model1);
+
+        SDModel model2 = new SDModel();
+        model2.setTransID("SD");
+        model2.setActionUID('I');
+        model2.setDiscipline("PS");
+        model2.setIuthDef(0.30000001192092895508);
+        model2.setIuwkDef(0.30000001192092895508);
+        model2.setSdc("B7000");
+        model2.setDateTime("20090728212122");
+        model2.setSdcCapacity("All");
+        model2.setSdcDesc("Photograph");
+        model2.setSdcGenericDesc("PHOTOGRAPH - PS");
+        model2.setNumRegBlocks(1);
+        model2.setTransAttempt('0');
+        model2.setRegBlocks("PS0  0  DR   12 FA   12 MQ   12 OS   0  SB   0  ");
+
+        sdModels.add(model2);
+
+        SDModel model3 = new SDModel();
+        model3.setTransID("SD");
+        model3.setActionUID('I');
+        model3.setDiscipline("EL");
+        model3.setIuthDef(0.30000001192092895508);
+        model3.setIuwkDef(0.0);
+        model3.setSdc("E7003");
+        model3.setDateTime("20090728212122");
+        model3.setSdcCapacity("All");
+        model3.setSdcDesc("Photograph");
+        model3.setSdcGenericDesc("PHOTOGRAPH - EL");
+        model3.setNumRegBlocks(0);
+        model3.setTransAttempt('1');
+        model3.setRegBlocks("HS   0  DR   12 FA   12 MQ   12 OS   0  SB   0  ");
+
+        sdModels.add(model3);
+
+        return sdModels;
     }
 }

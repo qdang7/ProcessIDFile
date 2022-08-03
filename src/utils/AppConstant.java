@@ -46,4 +46,8 @@ public class AppConstant {
     public static int LEN_OccPostCodeOut = 4;
     public static int LEN_OccPostCodeIn = 3;
     public static int MAXLINE = 128;
+
+    public static int LEN_ITM_SDC = 5;
+    public static int LEN_ITM_DESC = 70;
+    public static int LEN_CAPACITY = 20;
 }
