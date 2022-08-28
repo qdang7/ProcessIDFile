@@ -230,13 +230,13 @@ private static List<Object> readIDFile(String filePath){
         headerModel.setCounter(String.valueOf(1));
 
         try {
-
             /* Populate the header */
             String header = String.format("%5s%2s %6s %8s %8s%3s", headerModel.getHeaderIdent(),
                     headerModel.getTransCode(), headerModel.getCounter(), headerModel.getDate(), headerModel.getTime(),
                     headerModel.getTrailer());
 
             byte[] writeHeader = header.getBytes();
+
             byteBuffer.put(writeHeader);
 
             byteBuffer.flip();
@@ -263,7 +263,7 @@ private static List<Object> readIDFile(String filePath){
 
         Footer footerModel = new Footer();
 //		footerModel.setTransCode("FN");
-        footerModel.setTransCode("ID");
+        footerModel.setTransCode("SD");
         footerModel.setCounter(String.valueOf(1));
         footerModel.setRecordCount(String.valueOf(1));
         footerModel.setDate(localDateTime.format(formatDate));
@@ -293,32 +293,65 @@ private static List<Object> readIDFile(String filePath){
     }
 
     private static void writeSDFile(SDModel model, FileChannel sdChannel){
+
         byte[] buffer;
+
         ByteBuffer sizeBuffer = ByteBuffer.allocate(0x100000);
         sizeBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
         buffer = model.getTransID().getBytes();
         sizeBuffer.put(buffer);
+        System.out.println(model.getTransID());
 
         byte transAttempt = (byte) model.getTransAttempt();
         sizeBuffer.put(transAttempt);
 
+
+
         buffer = model.getDateTime().getBytes();
         sizeBuffer.put(buffer);
+        System.out.println(model.getDateTime());
+
 
         byte actionUID = (byte) model.getActionUID();
         sizeBuffer.put(actionUID);
 
         buffer = model.getSdc().getBytes();
         sizeBuffer.put(buffer);
+        System.out.println(buffer.toString());
         
-        sizeBuffer.putLong(model.getSdcDestID());
+        sizeBuffer.putInt(model.getSdcDestID());
+
+        buffer = model.getSdcGenericDesc().getBytes();
+        sizeBuffer.put(buffer);
+        System.out.println(buffer.toString());
+
+        buffer = model.getSdcCapacity().getBytes();
+        sizeBuffer.put(buffer);
+        System.out.println(buffer.toString());
+
+        buffer = model.getSdcDesc().getBytes();
+        sizeBuffer.put(buffer);
+
+        buffer = model.getDiscipline().getBytes();
+        sizeBuffer.put(buffer);
+        System.out.println(buffer.toString());
+
+        sizeBuffer.putFloat((float) model.getIuwkDef());
+
+        sizeBuffer.putFloat((float) model.getIuthDef());
+
+        sizeBuffer.putShort((short) model.getNumRegBlocks());
 
         buffer = model.getRegBlocks().getBytes();
         sizeBuffer.put(buffer);
 
 
-        sizeBuffer.putChar(' ');
+//        sizeBuffer.putChar(' ');
+//        sizeBuffer.putChar(' ');
+        char temp = ' ';
+        byte nullByte = (byte) temp;
+        sizeBuffer.put(nullByte);
 
 //        sizeBuffer.putInt(model.getScheduleID());
 //
@@ -370,6 +403,19 @@ private static List<Object> readIDFile(String filePath){
         sdModel.setNumRegBlocks(byteBuffer.getShort(byteBuffCursor));
         byteBuffCursor += 2;
 
+        System.out.println(sdModel.getTransID());
+        System.out.println(sdModel.getTransAttempt());
+        System.out.println(sdModel.getDateTime());
+        System.out.println(sdModel.getActionUID());
+        System.out.println(sdModel.getSdc());
+        System.out.println(sdModel.getSdcDestID());
+        System.out.println(sdModel.getSdcGenericDesc());
+        System.out.println(sdModel.getSdcDesc());
+        System.out.println(sdModel.getDiscipline());
+        System.out.println(sdModel.getIuwkDef());
+        System.out.println(sdModel.getIuthDef());
+        System.out.println(sdModel.getNumRegBlocks());
+        String test = data.substring(byteBuffCursor);
         sdModel.setRegBlocks(data.substring(byteBuffCursor, byteBuffCursor += sdModel.getNumRegBlocks() * 8));
 
         // Read null byte of each record
@@ -378,62 +424,44 @@ private static List<Object> readIDFile(String filePath){
         return sdModel;
     }
 
+    public static void readFile(FileInputStream fileInputStream) throws IOException {
 
-    public static void main(String[] args) throws IOException {
         String data = "";
-        FileInputStream fileInputStream = new FileInputStream(new File(FILE_PATH_INPUT));
         ByteBuffer byteBuffer = ByteBuffer.allocate(0x10000);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
         FileChannel fileChannel = fileInputStream.getChannel();
         fileChannel.read(byteBuffer);
         data = new String(byteBuffer.array());
 
-//        Header header = readHeader(data);
-//        System.out.println(header.getTransCode());
-//        System.out.println(header.getCounter());
-//        System.out.println(header.getDate());
-//        System.out.println(header.getTime());
-//        System.out.println(header.getTrailer());
-//        int i=0;
-//        while (true){
-//            try {
-//                SDModel model = readSDFixed(byteBuffer, data);
+        Header header = readHeader(data);
+        System.out.println(header.getTransCode());
+        System.out.println(header.getCounter());
+        System.out.println(header.getDate());
+        System.out.println(header.getTime());
+        System.out.println(header.getTrailer());
+        int i=0;
+        while (i<2){
+            try {
+                SDModel model = readSDFixed(byteBuffer, data);
+
 //
-//                System.out.println(model.getTransID());
-//                System.out.println(model.getTransAttempt());
-//                System.out.println(model.getDateTime());
-//                System.out.println(model.getActionUID());
-//                System.out.println(model.getSdc());
-//                System.out.println(model.getSdcDestID());
-//                System.out.println(model.getSdcGenericDesc());
-//                System.out.println(model.getSdcCapacity());
-//                System.out.println(model.getSdcDesc());
-//                System.out.println(model.getDiscipline());
-//                System.out.println(model.getIuwkDef());
-//                System.out.println(model.getIuthDef());
-//                System.out.println(model.getNumRegBlocks());
-//                System.out.println(model.getRegBlocks());
-//                i++;
-//            }catch (Exception e){
-//                break;
-//            }
-//        }
-//
-//        Footer footer = readFooter(data);
-//        System.out.println(footer.getFooterIdent());
-//        System.out.println(footer.getCounter());
-//        System.out.println(footer.getRecordCount());
-//        System.out.println(footer.getRowText());
-//        System.out.println(footer.getTime());
-//        System.out.println(footer.getDate());
+                i++;
+            }catch (Exception e){
+                break;
+            }
+        }
 
-        /* Line of codes below is for file writing */
+        Footer footer = readFooter(data);
+        System.out.println(footer.getFooterIdent());
+        System.out.println(footer.getCounter());
+        System.out.println(footer.getRecordCount());
+        System.out.println(footer.getRowText());
+        System.out.println(footer.getTime());
+        System.out.println(footer.getDate());
+    }
 
-        FileOutputStream fileOutputStream = new FileOutputStream(new File(FILE_PATH_OUTPUT));
-        FileChannel outputChannel = fileOutputStream.getChannel();
-
-
-        models.Header header = new models.Header();
+    public static void writeFile(FileChannel outputChannel) throws FileNotFoundException {
+        Header header = new Header();
         header.setHeaderIdent("HEAD>>");
         header.setDate("20220517");
         header.setTime("21:15:08");
@@ -446,7 +474,7 @@ private static List<Object> readIDFile(String filePath){
 
         List<SDModel> sdModels = utils.DataGenerator.initSDModels();
 
-        models.Footer footer = new models.Footer();
+        Footer footer = new Footer();
         footer.setCounter("0");
         footer.setFooterIdent("Foot>>");
         footer.setDate("20220517");
@@ -460,10 +488,27 @@ private static List<Object> readIDFile(String filePath){
         footer.setSpacer5(' ');
 
         writeHeaderwithTransCode(outputChannel, "SD");
+
         for (SDModel model: sdModels) {
             writeSDFile(model, outputChannel);
         }
         writeFooter(outputChannel);
+    }
+
+
+    public static void main(String[] args) throws IOException {
+
+        FileInputStream fileInputStream = new FileInputStream(new File(FILE_PATH_OUTPUT));
+//
+        readFile(fileInputStream);
+
+
+        /* Line of codes below is for file writing */
+
+        FileOutputStream fileOutputStream = new FileOutputStream(new File(FILE_PATH_OUTPUT));
+        FileChannel outputChannel = fileOutputStream.getChannel();
+//
+//        writeFile(outputChannel);
     }
 
 }
