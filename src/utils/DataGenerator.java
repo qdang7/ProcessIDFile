@@ -103,7 +103,7 @@ public class DataGenerator {
         model1.setTransAttempt('0');
         model1.setRegBlocks("CR   12 DR   12 FA   12 MQ   12 OS   0  SB   0  ");
 
-        sdModels.add(sdModelFormator(model1));
+        sdModels.add(model1);
 
         SDModel model2 = new SDModel();
         model2.setTransID("SD");
@@ -120,7 +120,7 @@ public class DataGenerator {
         model2.setTransAttempt('0');
         model2.setRegBlocks("PS0  0  DR   12 FA   12 MQ   12 OS   0  SB   0  ");
 //
-        sdModels.add(sdModelFormator(model2));
+        sdModels.add(model2);
 //
         SDModel model3 = new SDModel();
         model3.setTransID("SD");
@@ -137,7 +137,7 @@ public class DataGenerator {
         model3.setTransAttempt('1');
         model3.setRegBlocks("HS   0  DR   12 FA   12 MQ   12 OS   0  SB   0  ");
 
-        sdModels.add(sdModelFormator(model3));
+        sdModels.add(model3);
 
         return sdModels;
     }

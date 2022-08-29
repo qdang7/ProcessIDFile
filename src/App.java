@@ -3,6 +3,7 @@ import models.Header;
 import models.IDModel;
 import models.SDModel;
 import utils.AppConstant;
+import utils.DataGenerator;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class App {
-    public static final String FILE_PATH_INPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Documents\\RDNSDC_Precondition\\Hex-Json\\SD113361.C2N";
+    public static final String FILE_PATH_INPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Documents\\RDNSDC_Precondition\\Hex-Json\\SDSample1313Record.C2N";
     public static final String FILE_PATH_OUTPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Documents\\RDNSDC_Precondition\\Hex-Json\\sdoutput.C2N";
     private static boolean breakLoop = false;
     private static int byteBuffCursor = 0;
@@ -295,6 +296,31 @@ private static List<Object> readIDFile(String filePath){
     private static void writeSDFile(SDModel model, FileChannel sdChannel){
 
         byte[] buffer;
+        /* Add missing null byte to field Capacity, SDCDesc, SDCGenericDesc */
+        String temp = "";
+        int size = 0;
+
+        temp = model.getSdcCapacity();
+        size = AppConstant.LEN_Capacity - temp.length();
+        for(int i=0; i<size; i++){
+            temp += "\0";
+        }
+        model.setSdcCapacity(temp);
+
+        temp = model.getSdcDesc();
+        size = AppConstant.LEN_ITM_DESC - temp.length();
+        for(int i=0; i<size; i++){
+            temp += "\0";
+        }
+        model.setSdcDesc(temp);
+
+        temp = model.getSdcGenericDesc();
+        size = AppConstant.LEN_ITM_DESC - temp.length();
+        for(int i=0; i<size; i++){
+            temp += "\0";
+        }
+        model.setSdcGenericDesc(temp);
+
 
         ByteBuffer sizeBuffer = ByteBuffer.allocate(0x100000);
         sizeBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -349,8 +375,8 @@ private static List<Object> readIDFile(String filePath){
 
 //        sizeBuffer.putChar(' ');
 //        sizeBuffer.putChar(' ');
-        char temp = ' ';
-        byte nullByte = (byte) temp;
+        char tmp = ' ';
+        byte nullByte = (byte) tmp;
         sizeBuffer.put(nullByte);
 
 //        sizeBuffer.putInt(model.getScheduleID());
@@ -507,7 +533,7 @@ private static List<Object> readIDFile(String filePath){
 
         FileOutputStream fileOutputStream = new FileOutputStream(new File(FILE_PATH_OUTPUT));
         FileChannel outputChannel = fileOutputStream.getChannel();
-//
+
 //        writeFile(outputChannel);
     }
 
