@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class App {
-    public static final String FILE_PATH_INPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Documents\\RDNSDC_Precondition\\Hex-Json\\SDSample1313Record.C2N";
+    public static final String FILE_PATH_INPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Documents\\RDNSDC_Precondition\\Hex-Json\\SD116398.C2N";
     public static final String FILE_PATH_OUTPUT = "C:\\Users\\qdang7\\OneDrive - DXC Production\\Documents\\DXC_ZurichSteel\\Documents\\RDNSDC_Precondition\\Hex-Json\\sdoutput.C2N";
     private static boolean breakLoop = false;
     private static int byteBuffCursor = 0;
@@ -369,22 +369,14 @@ private static List<Object> readIDFile(String filePath){
 
         sizeBuffer.putShort((short) model.getNumRegBlocks());
 
-        buffer = model.getRegBlocks().getBytes();
-        sizeBuffer.put(buffer);
+        if(model.getActionUID() != 'D'){
+            buffer = model.getRegBlocks().getBytes();
+            sizeBuffer.put(buffer);
 
-
-//        sizeBuffer.putChar(' ');
-//        sizeBuffer.putChar(' ');
-        char tmp = ' ';
-        byte nullByte = (byte) tmp;
-        sizeBuffer.put(nullByte);
-
-//        sizeBuffer.putInt(model.getScheduleID());
-//
-//        sizeBuffer.putInt(model.getItemID());
-//
-//        byte nullByte = (byte) model.getREC_NULL();
-//        sizeBuffer.put(nullByte);
+            char tmp = ' ';
+            byte nullByte = (byte) tmp;
+            sizeBuffer.put(nullByte);
+        }
 
         sizeBuffer.flip();
         try {
@@ -441,11 +433,13 @@ private static List<Object> readIDFile(String filePath){
         System.out.println(sdModel.getIuwkDef());
         System.out.println(sdModel.getIuthDef());
         System.out.println(sdModel.getNumRegBlocks());
-        String test = data.substring(byteBuffCursor);
-        sdModel.setRegBlocks(data.substring(byteBuffCursor, byteBuffCursor += sdModel.getNumRegBlocks() * 8));
+        if(sdModel.getActionUID() != 'D'){
+            String test = data.substring(byteBuffCursor);
+            sdModel.setRegBlocks(data.substring(byteBuffCursor, byteBuffCursor += sdModel.getNumRegBlocks() * 8));
+            // Read null byte of each record
+            byteBuffCursor += 1;
+        }
 
-        // Read null byte of each record
-        byteBuffCursor += 1;
 
         return sdModel;
     }
@@ -469,8 +463,6 @@ private static List<Object> readIDFile(String filePath){
         while (i<2){
             try {
                 SDModel model = readSDFixed(byteBuffer, data);
-
-//
                 i++;
             }catch (Exception e){
                 break;
@@ -524,9 +516,9 @@ private static List<Object> readIDFile(String filePath){
 
     public static void main(String[] args) throws IOException {
 
-        FileInputStream fileInputStream = new FileInputStream(new File(FILE_PATH_OUTPUT));
+        FileInputStream fileInputStream = new FileInputStream(new File(FILE_PATH_INPUT));
 //
-        readFile(fileInputStream);
+//        readFile(fileInputStream);
 
 
         /* Line of codes below is for file writing */
@@ -534,7 +526,7 @@ private static List<Object> readIDFile(String filePath){
         FileOutputStream fileOutputStream = new FileOutputStream(new File(FILE_PATH_OUTPUT));
         FileChannel outputChannel = fileOutputStream.getChannel();
 
-//        writeFile(outputChannel);
+        writeFile(outputChannel);
     }
 
 }
